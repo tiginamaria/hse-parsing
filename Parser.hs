@@ -3,7 +3,9 @@ module Parser where
 import Tokenizer
 import Prelude hiding (lookup)
 
-data AST = ASum Operator AST AST
+data AST = APower Operator AST AST
+         | AUminus AST
+         | ASum Operator AST AST
          | AProd Operator AST AST
          | AAssign String AST
          | ANum Integer
@@ -35,11 +37,20 @@ expression ts =
 
 term :: [Token] -> (AST, [Token])
 term ts =
-  let (factNode, ts') = factor ts in
+  let (powNode, ts') = pow ts in
   case lookup ts' of
     TOp op | op == Mult || op == Div ->
       let (termNode, ts'') = term $ accept ts' in
-      (AProd op factNode termNode, ts'')
+      (AProd op powNode termNode, ts'')
+    _ -> (powNode, ts')
+    
+pow :: [Token] -> (AST, [Token])
+pow ts =
+  let (factNode, ts') = factor ts in
+  case lookup ts' of
+    TOp op | op == Power ->
+      let (powNode, ts'') = pow $ accept ts' in
+      (APower op factNode powNode, ts'')
     _ -> (factNode, ts')
 
 factor :: [Token] -> (AST, [Token])
@@ -52,6 +63,9 @@ factor ts =
         _ -> error "Syntax error: mismatched parentheses"
     TIdent v -> (AIdent v, accept ts)
     TDigit d -> (ANum d, accept ts)
+    TOp op | op == Minus ->
+      let (factNode, ts') = factor $ accept ts in 
+      (AUminus factNode, ts')
     _ -> error "Syntax error: factor can only be a digit, an identifier or a parenthesised expression"
 
 lookup :: [Token] -> Token
@@ -70,9 +84,13 @@ instance Show AST where
                   AProd op l r -> showOp op : "\n" ++ show' (ident n) l ++ "\n" ++ show' (ident n) r
                   AAssign  v e -> v ++ " =\n" ++ show' (ident n) e
                   ANum   i     -> show i
-                  AIdent i     -> i)
+                  AIdent i     -> i
+                  AUminus r    -> showOp Minus : "\n" ++ show' (ident n) r
+                  APower op l r -> showOp op : "\n" ++ show' (ident n) l ++ "\n" ++ show' (ident n) r)
+               
       ident = (+1)
       showOp Plus  = '+'
       showOp Minus = '-'
       showOp Mult  = '*'
       showOp Div   = '/'
+      showOp Power = '^'
