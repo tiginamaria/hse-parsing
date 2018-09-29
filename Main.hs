@@ -10,6 +10,6 @@ runParser input = do
 
 main :: IO ()
 main = do
-  runParser " 1 - 2 - 3 "
+  runParser " var = 1 - 2 + c - 30 "
   runParser " (((9)))"
   runParser " 1 * 2 - 3 / 4 + 5"

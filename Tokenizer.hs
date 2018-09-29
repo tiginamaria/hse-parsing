@@ -1,7 +1,7 @@
 module Tokenizer where
 
 data Token = TDigit Integer
-           | TIdent Char
+           | TIdent String
            | TOp Operator
            | TLParen
            | TRParen
@@ -18,8 +18,12 @@ data Operator = Plus
 tokenize :: String -> [Token]
 tokenize [] = [TEof]
 tokenize (c : cs) | isOperator c   = TOp (operator c) : tokenize cs
-                  | isDigit c      = TDigit (digit c) : tokenize cs
-                  | isAlpha c      = TIdent (alpha c) : tokenize cs
+                  | isDigit c      =
+                      let (num, cs') = span isDigit cs in
+                      TDigit (number (c:num)) : tokenize cs'
+                  | isAlpha c      = 
+                      let (var, cs') = span isAlpha cs in
+                      TIdent (c:var) : tokenize cs'
                   | c == '('       = TLParen : tokenize cs
                   | c == ')'       = TRParen : tokenize cs
                   | c == '='       = TAssign : tokenize cs
@@ -51,6 +55,10 @@ digit c | c == '0' = 0
         | c == '8' = 8
         | c == '9' = 9
 digit c = error ("Lexical error: " ++ c : " is not a digit!")
+
+number :: String -> Integer
+number (d : ds) | ds == [] = digit d
+                | otherwise = (digit d) * 10 + number ds
 
 isAlpha :: Char -> Bool
 isAlpha c = c `elem` ['a' .. 'z']
