@@ -12,6 +12,6 @@ main :: IO ()
 main = do
   runParser " var = 2 ^ 3 / 8"
   runParser " (((9)))"
-  runParser " x = 1 - 2 - 3 * 2 * (1 - 2 ^ (-1) ^ (2 * 4))"
+  runParser " x = 123 - 2 - 345 * 2 * (1 - 2 ^ (-1) ^ (2 * 4))"
   runParser " x = -(-1)^2"
 

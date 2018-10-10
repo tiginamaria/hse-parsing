@@ -59,8 +59,8 @@ digit c | c == '0' = 0
 digit c = error ("Lexical error: " ++ c : " is not a digit!")
 
 number :: String -> Integer
-number (d : ds) | ds == [] = digit d
-                | otherwise = (digit d) * 10 + number ds
+number [] = error ("Lexical error: is not a number!")
+number s = read s :: Integer
 
 isAlpha :: Char -> Bool
 isAlpha c = c `elem` ['a' .. 'z']
