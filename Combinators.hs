@@ -50,13 +50,7 @@ elem :: Parser Char
 elem (c : cs) = Success (c, cs)
 elem [] = Error "Empty string"
 
--- Chops of the first element of the string
-
-try :: String -> Parser a -> (Bool, String, Maybe a)
-try inp p = case p inp of
-  Success (r, inp') -> (True, inp', Just r)
-  Error err -> (False, err, Nothing)
-               
+-- Chops of the prefix of the string satisfies the predicate     
 get :: (Char -> Bool) -> Parser String
 get pred s = let (a, b) = span pred s in
                  case a of
@@ -67,9 +61,6 @@ eof :: Parser [a]
 eof inp = case elem inp of 
   Success _ -> Error "Not empty string"
   Error   _ -> Success([], inp)
-  
-eoexpr:: Parser Char
-eoexpr = char ';'
 
 -- Checks if the first character of the string is the given one
 char :: Char -> Parser Char

@@ -67,7 +67,6 @@ mathexpr =
 
 term :: Parser AST
 term =
-  {- make sure we don't reparse the factor (Term -> Pow (('/' | '*') Term | epsilon ))-}
   power >>= \l ->
   ( ( divMult >>= \op ->
       term    >>= \r  -> return (AProd op l r)
@@ -77,7 +76,6 @@ term =
 
 power :: Parser AST
 power =
-  {- make sure we don't reparse the factor (Term -> Factor (('/' | '*') Term | epsilon ))-}
   factor >>= \l ->
   ( ( pow   >>= \op ->
       power >>= \r  -> return (APow op l r)
@@ -120,6 +118,9 @@ assignment = char '='
 
 eoinput :: Parser [AST]
 eoinput = eof
+  
+eoexpr:: Parser Char
+eoexpr = char ';'
 
 comma :: Parser Char
 comma = char ','
