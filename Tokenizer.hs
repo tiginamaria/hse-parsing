@@ -1,35 +1,12 @@
 module Tokenizer where
-
-data Token = TDigit Integer
-           | TIdent String
-           | TOp Operator
-           | TLParen
-           | TRParen
-           | TAssign
-           | TEof
-           deriving (Show, Eq)
+import Prelude hiding (isSpace)
 
 data Operator = Plus
               | Minus
               | Mult
               | Div
-              | Power
+              | Pow
               deriving (Show, Eq)
-
-tokenize :: String -> [Token]
-tokenize [] = [TEof]
-tokenize (c : cs) | isOperator c   = TOp (operator c) : tokenize cs
-                  | isDigit c      =
-                      let (num, cs') = span isDigit cs in
-                      TDigit (number (c:num)) : tokenize cs'
-                  | isAlpha c      = 
-                      let (var, cs') = span isAlpha cs in
-                      TIdent (c:var) : tokenize cs'
-                  | c == '('       = TLParen : tokenize cs
-                  | c == ')'       = TRParen : tokenize cs
-                  | c == '='       = TAssign : tokenize cs
-                  | isWhiteSpace c = tokenize cs
-                  | otherwise = error ("Lexical error: unacceptable character " ++ [c])
 
 isOperator :: Char -> Bool
 isOperator x = x `elem` "+-*/^"
@@ -39,7 +16,7 @@ operator c | c == '+' = Plus
            | c == '-' = Minus
            | c == '*' = Mult
            | c == '/' = Div
-           | c == '^' = Power
+           | c == '^' = Pow
 operator c = error ("Lexical error: " ++ c : " is not an operator!")
 
 isDigit :: Char -> Bool
@@ -58,9 +35,9 @@ digit c | c == '0' = 0
         | c == '9' = 9
 digit c = error ("Lexical error: " ++ c : " is not a digit!")
 
-number :: String -> Integer
-number [] = error ("Lexical error: is not a number!")
-number s = read s :: Integer
+num :: String -> Integer
+num [] = error ("Lexical error: is not a number!")
+num s = read s :: Integer
 
 isAlpha :: Char -> Bool
 isAlpha c = c `elem` ['a' .. 'z']
@@ -68,5 +45,14 @@ isAlpha c = c `elem` ['a' .. 'z']
 alpha :: Char -> Char
 alpha c = c
 
-isWhiteSpace :: Char -> Bool
-isWhiteSpace c = c `elem` " \t\n"
+ident :: String -> String
+ident s = s
+
+isSpace :: Char -> Bool
+isSpace c = c `elem` [' ', '\t', '\n', '\r', '\f', '\v']
+
+notEmpty :: String -> Bool
+notEmpty s = (/= []) s
+
+skipSpaces :: String -> String
+skipSpaces s = let (a, b) = span (isSpace) s in b
