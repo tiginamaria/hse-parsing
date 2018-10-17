@@ -24,34 +24,47 @@ parse =
           )
 
 expression :: Parser AST
-expression = mathexpr
-         <|> listexpr
-  
-listexpr :: Parser AST
-listexpr =
-  (     identifier >>= \(AIdent i) -> (
-        ( assignment |>
-          listexpr >>= \le -> return (AAssign i le)
-        )
+expression = 
+  ( identifier >>= \(AIdent i) ->
+    ( ( assignment |>
+        expression >>= \e -> return (AAssign i e)
+      )
     <|> ( concatL  >>= \op -> 
           listexpr >>= \le -> return (ALConcat "++" (AIdent i) le)
         )
-    <|> return (AIdent i) )
+    )
+  )
+  <|> ( mathexpr )
+  <|> ( listexpr )
+  
+listexpr :: Parser AST
+listexpr =
+  ( identifier >>= \(AIdent i) ->
+    ( ( concatL  >>= \op -> 
+        listexpr >>= \le -> return (ALConcat "++" (AIdent i) le)
+      )
+      <|> (return (AIdent i)) 
+    )
   )
   <|> ( lsqparen |>
-        list     >>= \l ->
-        ( concatL  >>= \op -> 
-          listexpr >>= \le -> return (ALConcat "++" (AList l) le)
+        list         >>= \l ->
+        (
+          ( concatL  >>= \op -> 
+            listexpr >>= \le -> return (ALConcat "++" (AList l) le)
+          )
+        <|> return (AList l) 
         )
-        <|> return (AList l)
       )  
       
 list :: Parser [AST]
 list = 
-        expression >>= \e ->
-        ( (comma |> 
-        list >>= \l -> return ([e] ++ l))
-    <|> (rsqparen |> return([e])) )
+  ( expression >>= \e ->
+    (
+      ( comma |> list >>= \l -> return ([e] ++ l)) 
+      <|> (rsqparen |> return([e])) 
+    )
+  )
+  <|> (rsqparen |> return([]))
 
 mathexpr :: Parser AST
 mathexpr =
@@ -61,7 +74,7 @@ mathexpr =
   )
   <|> ( term       >>= \l  -> -- Here the identifier is parsed twice :(
         plusMinus  >>= \op ->
-        expression >>= \r  -> return (ASum op l r)
+        mathexpr >>= \r  -> return (ASum op l r)
       )
   <|> term  
 
@@ -152,7 +165,7 @@ instance Show AST where
                   ANum   i     -> show i
                   AUminus r    -> showOp T.Minus : "\n" ++ show' (ident n) r
                   APow op l r -> showOp op : "\n" ++ show' (ident n) l ++ "\n" ++ show' (ident n) r
-                  AIdent i     -> show i
+                  AIdent i     -> i
                   AList l -> show l
                   ALConcat op l r  -> op ++ "\n" ++ show' (ident n) l ++ "\n" ++ show' (ident n) r)
       ident = (+1)
